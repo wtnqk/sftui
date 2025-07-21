@@ -1,0 +1,185 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run with tmate debugging enabled'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # First: Publish to crates.io
+  publish-crate:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+      with:
+        save-if: false  # Don't save cache on release builds to avoid Cargo.lock issues
+    
+    - name: Setup tmate session
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      uses: mxschmitt/action-tmate@v3
+    
+    - name: Verify version
+      run: |
+        # Use cargo metadata for more robust version extraction
+        cargo_version=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+        
+        # Skip version check for workflow_dispatch
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "✅ Manual run - using version from Cargo.toml: $cargo_version"
+        else
+          tag_version="${GITHUB_REF#refs/tags/v}"
+          if [ "$cargo_version" != "$tag_version" ]; then
+            echo "Error: Cargo.toml version ($cargo_version) doesn't match tag version ($tag_version)"
+            exit 1
+          fi
+          echo "✅ Version verified: $cargo_version"
+        fi
+        
+    - name: Run tests
+      run: cargo test --all-features --verbose
+
+    - name: Check code formatting
+      run: cargo fmt --all -- --check
+
+    - name: Run Clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Verify package
+      run: cargo package --verbose --locked
+
+    - name: Publish to Crates.io
+      run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+      env:
+        CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+  # Second: Create GitHub Release
+  create-release:
+    name: Create GitHub Release
+    needs: publish-crate
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Get version from tag or Cargo.toml
+      id: get_version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          # For manual runs, get version from Cargo.toml
+          version=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "version=$version" >> $GITHUB_OUTPUT
+        else
+          # For tag pushes, extract from tag
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', steps.get_version.outputs.version) || github.ref }}
+        release_name: Release v${{ steps.get_version.outputs.version }}
+        draft: false
+        prerelease: false
+
+  build-binaries:
+    name: Build Release Binaries
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+          suffix: ""
+          archive: tar.gz
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-musl
+          suffix: ""
+          archive: tar.gz
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
+          suffix: ".exe"
+          archive: zip
+        - os: macos-latest
+          target: x86_64-apple-darwin
+          suffix: ""
+          archive: tar.gz
+        - os: macos-latest
+          target: aarch64-apple-darwin
+          suffix: ""
+          archive: tar.gz
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install build dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
+          sudo apt-get install -y musl-tools
+        fi
+        sudo apt-get install -y libssl-dev pkg-config
+    
+    - name: Install OpenSSL (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install openssl
+        echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
+        echo "C:\Program Files\OpenSSL-Win64\bin" >> $env:GITHUB_PATH
+    
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+    
+    - uses: Swatinem/rust-cache@v2
+    
+    - name: Build release binary
+      run: cargo build --release --locked --target ${{ matrix.target }}
+    
+    - name: Package (tar.gz)
+      if: matrix.archive == 'tar.gz'
+      shell: bash
+      run: |
+        cd target/${{ matrix.target }}/release
+        tar czf sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz sftui${{ matrix.suffix }}
+        mv sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz ../../../
+    
+    - name: Package (zip)
+      if: matrix.archive == 'zip'
+      shell: bash
+      run: |
+        cd target/${{ matrix.target }}/release
+        7z a sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip sftui${{ matrix.suffix }}
+        mv sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip ../../../
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive }}
+        asset_name: sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive }}
+        asset_content_type: application/octet-stream
+

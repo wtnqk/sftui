@@ -19,18 +19,21 @@ A terminal-based SFTP client with dual panes for local and remote file browsing,
 ## Requirements
 
 - **SSH Agent** (Strongly Recommended): For SSH key authentication, you must have ssh-agent running:
+
   ```bash
   # Start ssh-agent
   eval "$(ssh-agent -s)"
-  
+
   # Add your SSH key
   ssh-add ~/.ssh/id_rsa
   ```
+
   Without ssh-agent, only password authentication or unencrypted SSH keys will work.
 
 ## Installation
 
 ### From crates.io (when published)
+
 ```bash
 cargo install sftui
 ```
@@ -38,17 +41,20 @@ cargo install sftui
 ### From source
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/wtnqk/sftui.git
    cd sftui
    ```
 
 2. Build the application:
+
    ```bash
    cargo build --release
    ```
 
 3. Run the application:
+
    ```bash
    ./target/release/sftui
    # or install it
@@ -128,18 +134,18 @@ Host another-server
 
 ## Key Bindings Summary
 
-| Key | Action |
-|-----|--------|
-| Tab | Switch panes |
-| ↑/↓ or j/k | Navigate up/down |
-| Enter | Enter directory |
-| Space | Select/deselect |
-| / | Start search |
-| t or T | Transfer dialog |
-| c or C | Connection dialog |
-| q or Q | Quit |
-| Esc | Cancel dialog/search |
-| Backspace | Delete character (in search mode) |
+| Key        | Action                            |
+| ---------- | --------------------------------- |
+| Tab        | Switch panes                      |
+| ↑/↓ or j/k | Navigate up/down                  |
+| Enter      | Enter directory                   |
+| Space      | Select/deselect                   |
+| /          | Start search                      |
+| t or T     | Transfer dialog                   |
+| c or C     | Connection dialog                 |
+| q or Q     | Quit                              |
+| Esc        | Cancel dialog/search              |
+| Backspace  | Delete character (in search mode) |
 
 ## Transfer Workflow
 
@@ -152,20 +158,11 @@ Host another-server
 ## Building from Source
 
 Requirements:
+
 - Rust 1.70 or higher
 - OpenSSL development libraries
-
-```bash
-# Ubuntu/Debian
-sudo apt-get install libssl-dev pkg-config
-
-# macOS
-brew install openssl
-
-# Build
-cargo build --release
-```
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+

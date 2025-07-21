@@ -11,8 +11,8 @@ keywords = ["sftp", "ssh", "tui", "terminal", "file-transfer"]
 categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
-crossterm = "0.28"
-ratatui = "0.28"
+crossterm = "0.29"
+ratatui = "0.29"
 tokio = { version = "1.0", features = ["full"] }
 ssh2 = "0.9"
 anyhow = "1.0"

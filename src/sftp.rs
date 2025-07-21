@@ -162,3 +162,57 @@ impl SftpClient {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_file_info_creation() {
+        let file_info = FileInfo {
+            name: "test.txt".to_string(),
+            path: PathBuf::from("/home/user/test.txt"),
+            is_dir: false,
+            size: 1024,
+            permissions: 0o644,
+        };
+        
+        assert_eq!(file_info.name, "test.txt");
+        assert_eq!(file_info.path, PathBuf::from("/home/user/test.txt"));
+        assert!(!file_info.is_dir);
+        assert_eq!(file_info.size, 1024);
+        assert_eq!(file_info.permissions, 0o644);
+    }
+    
+    #[test]
+    fn test_file_info_directory() {
+        let dir_info = FileInfo {
+            name: "documents".to_string(),
+            path: PathBuf::from("/home/user/documents"),
+            is_dir: true,
+            size: 4096,
+            permissions: 0o755,
+        };
+        
+        assert!(dir_info.is_dir);
+        assert_eq!(dir_info.permissions, 0o755);
+    }
+    
+    #[test]
+    fn test_file_info_clone() {
+        let original = FileInfo {
+            name: "file.rs".to_string(),
+            path: PathBuf::from("/project/src/file.rs"),
+            is_dir: false,
+            size: 2048,
+            permissions: 0o644,
+        };
+        
+        let cloned = original.clone();
+        assert_eq!(original.name, cloned.name);
+        assert_eq!(original.path, cloned.path);
+        assert_eq!(original.is_dir, cloned.is_dir);
+        assert_eq!(original.size, cloned.size);
+        assert_eq!(original.permissions, cloned.permissions);
+    }
+}

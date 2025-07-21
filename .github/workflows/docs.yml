@@ -84,7 +84,7 @@ jobs:
               <h2>⚡ Prerequisites</h2>
               <p><strong>SSH Agent is strongly recommended:</strong></p>
               <pre><code># Start ssh-agent
-eval "$(ssh-agent -s)"
+eval "\$(ssh-agent -s)"
 
 # Add your SSH key
 ssh-add ~/.ssh/id_rsa</code></pre>

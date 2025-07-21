@@ -16,6 +16,10 @@ A terminal-based SFTP client with dual panes for local and remote file browsing,
 - **Confirmation Dialogs**: Review transfers before execution
 - **Directory Navigation**: Browse local and remote directories
 
+## Platform Support
+
+This application has been tested on macOS. It should also work on Linux and Windows if you can successfully build it, as it uses cross-platform Rust libraries.
+
 ## Requirements
 
 - **SSH Agent** (Strongly Recommended): For SSH key authentication, you must have ssh-agent running:
@@ -32,7 +36,7 @@ A terminal-based SFTP client with dual panes for local and remote file browsing,
 
 ## Installation
 
-### From crates.io (when published)
+### From crates.io
 
 ```bash
 cargo install sftui
@@ -40,26 +44,11 @@ cargo install sftui
 
 ### From source
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/wtnqk/sftui.git
-   cd sftui
-   ```
-
-2. Build the application:
-
-   ```bash
-   cargo build --release
-   ```
-
-3. Run the application:
-
-   ```bash
-   ./target/release/sftui
-   # or install it
-   cargo install --path .
-   ```
+```bash
+git clone https://github.com/wtnqk/sftui.git
+cd sftui
+cargo install --path .
+```
 
 ## Usage
 
@@ -157,10 +146,15 @@ Host another-server
 
 ## Building from Source
 
-Requirements:
+### Requirements
 
 - Rust 1.70 or higher
-- OpenSSL development libraries
+- OpenSSL development libraries (required by the ssh2 crate)
+
+The specific installation method for OpenSSL depends on your platform:
+- **Ubuntu/Debian**: `sudo apt-get install libssl-dev pkg-config`
+- **macOS**: `brew install openssl@3`
+- **Windows**: Install OpenSSL via vcpkg or from https://slproweb.com/products/Win32OpenSSL.html
 
 ## License
 

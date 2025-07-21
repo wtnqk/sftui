@@ -21,8 +21,8 @@ jobs:
           mkdir -p public
           cp README.md public/
           
-          # Create a simple HTML page that renders the README
-          cat > public/index.html << 'EOF'
+          # Create a simple HTML page
+          cat > public/index.html << 'HTMLEOF'
           <!DOCTYPE html>
           <html>
           <head>
@@ -84,7 +84,7 @@ jobs:
               <h2>✨ Features</h2>
               <ul>
                   <li>Dual pane interface for local and remote file browsing</li>
-                  <li>SSH config integration (~/.ssh/config)</li>
+                  <li>SSH config integration (reads from .ssh/config)</li>
                   <li>Runtime connection switching</li>
                   <li>Multiple file selection and batch transfers</li>
                   <li>Real-time file search</li>
@@ -101,7 +101,7 @@ jobs:
 sftui -H hostname  # Connect directly to a specific host</code></pre>
           </body>
           </html>
-          EOF
+          HTMLEOF
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

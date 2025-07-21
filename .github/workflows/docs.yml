@@ -1,91 +1,37 @@
-name: Build Docs 📝
+name: Deploy Docs
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - master
+    branches: [master]
     paths:
-      - README.md
+      - 'README.md'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
-  deploy-readme:
-    name: Deploy README to GitHub Pages
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Create simple documentation site
+      - uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Create docs directory
         run: |
-          mkdir -p public
-          cp README.md public/
+          mkdir -p _site
+          cp README.md _site/
+          echo '# sftui Documentation' > _site/index.md
+          echo '' >> _site/index.md
+          echo 'See [README.md](README.md) for full documentation.' >> _site/index.md
           
-          # Create index.html
-          cat > public/index.html << "EOF"
-<!DOCTYPE html>
-<html>
-<head>
-    <title>sftui - Terminal UI SFTP Client</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f6f8fa;
-            border-radius: 8px;
-        }
-        .header h1 { margin: 0 0 10px 0; color: #333; }
-        .header p { margin: 0; color: #666; }
-        .nav { margin: 20px 0; text-align: center; }
-        .nav a {
-            margin: 0 10px;
-            padding: 8px 16px;
-            background: #0366d6;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .nav a:hover { background: #0256cc; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>sftui</h1>
-        <p>Terminal UI SFTP Client</p>
-    </div>
-    
-    <div class="nav">
-        <a href="https://crates.io/crates/sftui">Crates.io</a>
-        <a href="https://github.com/wtnqk/sftui">GitHub</a>
-        <a href="https://docs.rs/sftui">docs.rs</a>
-    </div>
-    
-    <p>See <a href="https://github.com/wtnqk/sftui/blob/master/README.md">README.md</a> for documentation.</p>
-    
-    <h2>Quick Install</h2>
-    <pre><code>cargo install sftui</code></pre>
-</body>
-</html>
-EOF
-
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        if: github.ref == 'refs/heads/master'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          publish_branch: gh-pages
-          force_orphan: true
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: Deploy documentation from README
+        uses: actions/deploy-pages@v4

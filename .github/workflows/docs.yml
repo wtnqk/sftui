@@ -82,12 +82,8 @@ jobs:
               <pre><code>cargo install sftui</code></pre>
               
               <h2>⚡ Prerequisites</h2>
-              <p><strong>SSH Agent is strongly recommended:</strong></p>
-              <pre><code># Start ssh-agent
-eval "\$(ssh-agent -s)"
-
-# Add your SSH key
-ssh-add ~/.ssh/id_rsa</code></pre>
+              <p><strong>SSH Agent is strongly recommended for key authentication.</strong></p>
+              <p>Make sure ssh-agent is running and your SSH keys are added before using sftui.</p>
               
               <h2>💡 Quick Start</h2>
               <pre><code>sftui                  # Start with SSH config host selection

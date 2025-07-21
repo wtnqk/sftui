@@ -166,7 +166,7 @@ impl SftpClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_file_info_creation() {
         let file_info = FileInfo {
@@ -176,14 +176,14 @@ mod tests {
             size: 1024,
             permissions: 0o644,
         };
-        
+
         assert_eq!(file_info.name, "test.txt");
         assert_eq!(file_info.path, PathBuf::from("/home/user/test.txt"));
         assert!(!file_info.is_dir);
         assert_eq!(file_info.size, 1024);
         assert_eq!(file_info.permissions, 0o644);
     }
-    
+
     #[test]
     fn test_file_info_directory() {
         let dir_info = FileInfo {
@@ -193,11 +193,11 @@ mod tests {
             size: 4096,
             permissions: 0o755,
         };
-        
+
         assert!(dir_info.is_dir);
         assert_eq!(dir_info.permissions, 0o755);
     }
-    
+
     #[test]
     fn test_file_info_clone() {
         let original = FileInfo {
@@ -207,7 +207,7 @@ mod tests {
             size: 2048,
             permissions: 0o644,
         };
-        
+
         let cloned = original.clone();
         assert_eq!(original.name, cloned.name);
         assert_eq!(original.path, cloned.path);

@@ -67,7 +67,7 @@ jobs:
           <body>
               <div class="header">
                   <h1>📁 sftui</h1>
-                  <p>Terminal UI SFTP Client - A modern dual-pane SFTP client built with Rust</p>
+                  <p>Terminal UI SFTP Client - A dual-pane SFTP client built with Rust and Ratatui</p>
               </div>
               
               <div class="nav">
@@ -81,26 +81,24 @@ jobs:
               <h2>🚀 Quick Install</h2>
               <pre><code>cargo install sftui</code></pre>
               
+              <h2>✨ Features</h2>
+              <ul>
+                  <li>Dual pane interface for local and remote file browsing</li>
+                  <li>SSH config integration (~/.ssh/config)</li>
+                  <li>Runtime connection switching</li>
+                  <li>Multiple file selection and batch transfers</li>
+                  <li>Real-time file search</li>
+              </ul>
+              
+              <h2>🖥️ Platform Support</h2>
+              <p>Tested on macOS. Should work on Linux and Windows if you can build it successfully.</p>
+              
               <h2>⚡ Prerequisites</h2>
-              <p><strong>SSH Agent is strongly recommended for key authentication.</strong></p>
-              <p>Make sure ssh-agent is running and your SSH keys are added before using sftui.</p>
+              <p><strong>SSH Agent is recommended for key authentication.</strong></p>
               
               <h2>💡 Quick Start</h2>
-              <pre><code>sftui                  # Start with SSH config host selection
-sftui -H hostname      # Connect directly to a specific host  
-sftui -H user@host     # Connect with username and host</code></pre>
-              
-              <h2>⌨️ Key Bindings</h2>
-              <ul>
-                  <li><strong>Tab</strong> - Switch between local/remote panes</li>
-                  <li><strong>↑/↓ or j/k</strong> - Navigate files</li>
-                  <li><strong>Enter</strong> - Enter directory</li>
-                  <li><strong>Space</strong> - Select/deselect files</li>
-                  <li><strong>t</strong> - Transfer selected files</li>
-                  <li><strong>c</strong> - Change connection</li>
-                  <li><strong>/</strong> - Search files</li>
-                  <li><strong>q</strong> - Quit</li>
-              </ul>
+              <pre><code>sftui              # Start with SSH config host selection
+sftui -H hostname  # Connect directly to a specific host</code></pre>
           </body>
           </html>
           EOF

@@ -127,7 +127,9 @@ Host testserver
         temp_file.write_all(config_content.as_bytes()).unwrap();
 
         let mut config = SshConfig::new().unwrap();
-        config.parse_config(&temp_file.path().to_path_buf()).unwrap();
+        config
+            .parse_config(&temp_file.path().to_path_buf())
+            .unwrap();
 
         let host = config.get_host("testserver").unwrap();
         assert_eq!(host.host, "testserver");
@@ -157,7 +159,9 @@ Host server2
         temp_file.write_all(config_content.as_bytes()).unwrap();
 
         let mut config = SshConfig::new().unwrap();
-        config.parse_config(&temp_file.path().to_path_buf()).unwrap();
+        config
+            .parse_config(&temp_file.path().to_path_buf())
+            .unwrap();
 
         let hosts = config.get_all_hosts();
         // Check that we have at least the 2 hosts we defined (may include default Host *)
@@ -190,7 +194,9 @@ Host myserver
         temp_file.write_all(config_content.as_bytes()).unwrap();
 
         let mut config = SshConfig::new().unwrap();
-        config.parse_config(&temp_file.path().to_path_buf()).unwrap();
+        config
+            .parse_config(&temp_file.path().to_path_buf())
+            .unwrap();
 
         let host = config.get_host("myserver").unwrap();
         assert_eq!(host.hostname.as_ref().unwrap(), "example.com");
@@ -215,7 +221,9 @@ Host testserver
         temp_file.write_all(config_content.as_bytes()).unwrap();
 
         let mut config = SshConfig::new().unwrap();
-        config.parse_config(&temp_file.path().to_path_buf()).unwrap();
+        config
+            .parse_config(&temp_file.path().to_path_buf())
+            .unwrap();
 
         let host = config.get_host("testserver").unwrap();
         assert_eq!(host.port, None); // Invalid port should be ignored
@@ -232,10 +240,12 @@ Host testhost
         temp_file.write_all(config_content.as_bytes()).unwrap();
 
         let mut config = SshConfig::new().unwrap();
-        config.parse_config(&temp_file.path().to_path_buf()).unwrap();
+        config
+            .parse_config(&temp_file.path().to_path_buf())
+            .unwrap();
         // Check that we have at least the 1 host we defined (may include default Host *)
         assert!(config.get_all_hosts().len() >= 1);
-        
+
         let host = config.get_host("testhost").unwrap();
         assert_eq!(host.hostname.as_ref().unwrap(), "test.example.com");
     }
@@ -254,11 +264,16 @@ Host testserver
         temp_file.write_all(config_content.as_bytes()).unwrap();
 
         let mut config = SshConfig::new().unwrap();
-        config.parse_config(&temp_file.path().to_path_buf()).unwrap();
+        config
+            .parse_config(&temp_file.path().to_path_buf())
+            .unwrap();
 
         let host = config.get_host("testserver").unwrap();
         assert_eq!(host.hostname.as_ref().unwrap(), "example.com");
         assert_eq!(host.user.as_ref().unwrap(), "testuser");
-        assert_eq!(host.identity_file.as_ref().unwrap(), &PathBuf::from("~/.ssh/key"));
+        assert_eq!(
+            host.identity_file.as_ref().unwrap(),
+            &PathBuf::from("~/.ssh/key")
+        );
     }
 }

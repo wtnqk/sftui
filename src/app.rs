@@ -538,7 +538,7 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_pane_toggle() {
         let pane = Pane::Local;
@@ -546,14 +546,14 @@ mod tests {
             Pane::Local => assert!(true),
             Pane::Remote => assert!(false),
         }
-        
+
         let pane = Pane::Remote;
         match pane {
             Pane::Local => assert!(false),
             Pane::Remote => assert!(true),
         }
     }
-    
+
     #[test]
     fn test_transfer_item_upload() {
         let item = TransferItem {
@@ -561,7 +561,7 @@ mod tests {
             destination: PathBuf::from("/dest/file.txt"),
             direction: TransferDirection::Upload,
         };
-        
+
         assert_eq!(item.source, PathBuf::from("/source/file.txt"));
         assert_eq!(item.destination, PathBuf::from("/dest/file.txt"));
         match item.direction {
@@ -569,7 +569,7 @@ mod tests {
             TransferDirection::Download => assert!(false),
         }
     }
-    
+
     #[test]
     fn test_transfer_item_download() {
         let item = TransferItem {
@@ -577,13 +577,13 @@ mod tests {
             destination: PathBuf::from("/local/file.txt"),
             direction: TransferDirection::Download,
         };
-        
+
         match item.direction {
             TransferDirection::Upload => assert!(false),
             TransferDirection::Download => assert!(true),
         }
     }
-    
+
     #[test]
     fn test_transfer_direction_clone() {
         let upload = TransferDirection::Upload;

@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/sftui.svg)](https://crates.io/crates/sftui)
 [![Documentation](https://docs.rs/sftui/badge.svg)](https://docs.rs/sftui)
 [![CI](https://github.com/wtnqk/sftui/workflows/CI/badge.svg)](https://github.com/wtnqk/sftui/actions)
-[![License](https://img.shields.io/crates/l/sftui.svg)](LICENSE)
+[![License](https://img.shields.io/crates/l/sftui.svg)](LICENSE-MIT)
 
 A terminal-based SFTP client with dual panes for local and remote file browsing, built with Rust and Ratatui.
 
@@ -152,11 +152,11 @@ Host another-server
 - OpenSSL development libraries (required by the ssh2 crate)
 
 The specific installation method for OpenSSL depends on your platform:
+
 - **Ubuntu/Debian**: `sudo apt-get install libssl-dev pkg-config`
 - **macOS**: `brew install openssl@3`
-- **Windows**: Install OpenSSL via vcpkg or from https://slproweb.com/products/Win32OpenSSL.html
+- **Windows**: Install OpenSSL via vcpkg or from <https://slproweb.com/products/Win32OpenSSL.html>
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-

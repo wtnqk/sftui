@@ -21,87 +21,60 @@ jobs:
           mkdir -p public
           cp README.md public/
           
-          # Create a simple HTML page
-          cat > public/index.html << 'HTMLEOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>sftui - A Terminal UI SFTP Client</title>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1">
-              <style>
-                  body { 
-                      font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
-                      max-width: 800px; 
-                      margin: 0 auto; 
-                      padding: 20px; 
-                      line-height: 1.6; 
-                  }
-                  .header {
-                      text-align: center;
-                      margin-bottom: 30px;
-                      padding: 20px;
-                      background: #f6f8fa;
-                      border-radius: 8px;
-                  }
-                  .header h1 { margin: 0 0 10px 0; color: #333; }
-                  .header p { margin: 0; color: #666; }
-                  .nav { margin: 20px 0; text-align: center; }
-                  .nav a { 
-                      margin: 0 10px; 
-                      padding: 8px 16px;
-                      background: #0366d6;
-                      color: white;
-                      text-decoration: none;
-                      border-radius: 4px;
-                  }
-                  .nav a:hover { background: #0256cc; }
-                  iframe {
-                      width: 100%;
-                      min-height: 800px;
-                      border: none;
-                      background: white;
-                  }
-              </style>
-          </head>
-          <body>
-              <div class="header">
-                  <h1>📁 sftui</h1>
-                  <p>Terminal UI SFTP Client - A dual-pane SFTP client built with Rust and Ratatui</p>
-              </div>
-              
-              <div class="nav">
-                  <a href="https://crates.io/crates/sftui">📦 Crates.io</a>
-                  <a href="https://github.com/wtnqk/sftui">🔗 GitHub</a>
-                  <a href="https://docs.rs/sftui">📚 docs.rs</a>
-              </div>
-              
-              <p><strong>📖 Documentation:</strong> See <a href="https://github.com/wtnqk/sftui/blob/master/README.md">README.md</a> for complete usage instructions.</p>
-              
-              <h2>🚀 Quick Install</h2>
-              <pre><code>cargo install sftui</code></pre>
-              
-              <h2>✨ Features</h2>
-              <ul>
-                  <li>Dual pane interface for local and remote file browsing</li>
-                  <li>SSH config integration (reads from .ssh/config)</li>
-                  <li>Runtime connection switching</li>
-                  <li>Multiple file selection and batch transfers</li>
-                  <li>Real-time file search</li>
-              </ul>
-              
-              <h2>🖥️ Platform Support</h2>
-              <p>Tested on macOS. Should work on Linux and Windows if you can build it successfully.</p>
-              
-              <h2>⚡ Prerequisites</h2>
-              <p><strong>SSH Agent is recommended for key authentication.</strong></p>
-              
-              <h2>💡 Quick Start</h2>
-              <pre><code>sftui              # Start with SSH config host selection
-sftui -H hostname  # Connect directly to a specific host</code></pre>
-          </body>
-          </html>
-          HTMLEOF
+          # Create index.html using printf to avoid YAML parsing issues
+          printf '<!DOCTYPE html>
+<html>
+<head>
+    <title>sftui - Terminal UI SFTP Client</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f6f8fa;
+            border-radius: 8px;
+        }
+        .header h1 { margin: 0 0 10px 0; color: #333; }
+        .header p { margin: 0; color: #666; }
+        .nav { margin: 20px 0; text-align: center; }
+        .nav a {
+            margin: 0 10px;
+            padding: 8px 16px;
+            background: #0366d6;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .nav a:hover { background: #0256cc; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sftui</h1>
+        <p>Terminal UI SFTP Client</p>
+    </div>
+    
+    <div class="nav">
+        <a href="https://crates.io/crates/sftui">Crates.io</a>
+        <a href="https://github.com/wtnqk/sftui">GitHub</a>
+        <a href="https://docs.rs/sftui">docs.rs</a>
+    </div>
+    
+    <p>See <a href="https://github.com/wtnqk/sftui/blob/master/README.md">README.md</a> for documentation.</p>
+    
+    <h2>Quick Install</h2>
+    <pre><code>cargo install sftui</code></pre>
+</body>
+</html>' > public/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

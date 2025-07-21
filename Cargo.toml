@@ -2,6 +2,13 @@
 name = "sftui"
 version = "0.1.0"
 edition = "2024"
+authors = ["wtnqk"]
+description = "A terminal UI SFTP client with dual-pane interface"
+repository = "https://github.com/wtnqk/sftui"
+readme = "README.md"
+license = "MIT"
+keywords = ["sftp", "ssh", "tui", "terminal", "file-transfer"]
+categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
 crossterm = "0.28"

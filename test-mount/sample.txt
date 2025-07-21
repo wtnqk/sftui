@@ -1,2 +1,0 @@
-This is a sample file in the shared mount directory.
-You can use this directory to test file transfers between host and container.

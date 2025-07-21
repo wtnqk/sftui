@@ -1,4 +1,9 @@
-# SFTUI - A Terminal UI SFTP Client
+# sftui - Terminal UI SFTP Client
+
+[![Crates.io](https://img.shields.io/crates/v/sftui.svg)](https://crates.io/crates/sftui)
+[![Documentation](https://docs.rs/sftui/badge.svg)](https://docs.rs/sftui)
+[![CI](https://github.com/wtnqk/sftui/workflows/CI/badge.svg)](https://github.com/wtnqk/sftui/actions)
+[![License](https://img.shields.io/crates/l/sftui.svg)](LICENSE)
 
 A terminal-based SFTP client with dual panes for local and remote file browsing, built with Rust and Ratatui.
 
@@ -13,13 +18,28 @@ A terminal-based SFTP client with dual panes for local and remote file browsing,
 
 ## Requirements
 
-- **Nerd Font**: The application uses Nerd Font icons for the best visual experience. Install any Nerd Font (e.g., JetBrainsMono Nerd Font, FiraCode Nerd Font) and configure your terminal to use it.
+- **SSH Agent** (Strongly Recommended): For SSH key authentication, you must have ssh-agent running:
+  ```bash
+  # Start ssh-agent
+  eval "$(ssh-agent -s)"
+  
+  # Add your SSH key
+  ssh-add ~/.ssh/id_rsa
+  ```
+  Without ssh-agent, only password authentication or unencrypted SSH keys will work.
 
 ## Installation
 
+### From crates.io (when published)
+```bash
+cargo install sftui
+```
+
+### From source
+
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/wtnqk/sftui.git
    cd sftui
    ```
 
@@ -31,6 +51,8 @@ A terminal-based SFTP client with dual panes for local and remote file browsing,
 3. Run the application:
    ```bash
    ./target/release/sftui
+   # or install it
+   cargo install --path .
    ```
 
 ## Usage
@@ -38,10 +60,10 @@ A terminal-based SFTP client with dual panes for local and remote file browsing,
 ### Basic Navigation
 
 - **Tab**: Switch between local and remote panes
-- **↑/↓**: Navigate file list
-- **Enter**: Change directory (when on a directory)
+- **↑/↓** or **j/k**: Navigate file list (vim-style navigation supported)
+- **Enter**: Enter directory (when on a directory)
 - **Space**: Select/deselect files for transfer
-- **q**: Quit application
+- **q** or **Q**: Quit application
 
 ### Search Function
 
@@ -60,25 +82,22 @@ A terminal-based SFTP client with dual panes for local and remote file browsing,
 
 ### Connection Management
 
-- **c**: Open connection dialog to switch SFTP destinations
+- **c** or **C**: Open connection dialog to switch SFTP destinations
 - The application reads SSH hosts from `~/.ssh/config`
 - You can specify a host at startup: `sftui -H hostname`
+- In connection dialog:
+  - **↑/↓**: Navigate host list
+  - **Enter**: Connect to selected host
+  - **Esc**: Cancel
 
 ### File Transfers
 
-- **t**: Open transfer dialog with staged files
-- **Enter** (in transfer dialog): Confirm and execute transfers
-- **Esc** (in transfer dialog): Cancel transfers
-
-### File Types
-
--  Directories
--  Files
--  Parent directory (..)
--  Upload transfer
--  Download transfer
-- Blue highlighting indicates selected items
-- Green border shows the active pane
+- **Space**: Select/deselect individual files
+- **t** or **T**: Open transfer dialog with selected files
+- Selected files appear with blue background
+- In transfer dialog:
+  - **Enter**: Confirm and execute transfers
+  - **Esc**: Cancel transfers
 
 ## SSH Configuration
 
@@ -112,19 +131,41 @@ Host another-server
 | Key | Action |
 |-----|--------|
 | Tab | Switch panes |
-| ↑/↓ | Navigate |
-| Enter | Change directory |
+| ↑/↓ or j/k | Navigate up/down |
+| Enter | Enter directory |
 | Space | Select/deselect |
 | / | Start search |
-| t | Transfer files |
-| c | Change connection |
-| q | Quit |
+| t or T | Transfer dialog |
+| c or C | Connection dialog |
+| q or Q | Quit |
 | Esc | Cancel dialog/search |
+| Backspace | Delete character (in search mode) |
 
 ## Transfer Workflow
 
 1. Navigate to desired directories in both panes
 2. Select files/directories using Space
-3. Press 't' to open transfer dialog
-4. Review the transfer queue (↑ = upload, ↓ = download)
+3. Press 't' or 'T' to open transfer dialog
+4. Review the transfer queue (arrows indicate direction)
 5. Press Enter to confirm or Esc to cancel
+
+## Building from Source
+
+Requirements:
+- Rust 1.70 or higher
+- OpenSSL development libraries
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install libssl-dev pkg-config
+
+# macOS
+brew install openssl
+
+# Build
+cargo build --release
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

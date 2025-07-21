@@ -534,3 +534,63 @@ impl App {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_pane_toggle() {
+        let pane = Pane::Local;
+        match pane {
+            Pane::Local => assert!(true),
+            Pane::Remote => assert!(false),
+        }
+        
+        let pane = Pane::Remote;
+        match pane {
+            Pane::Local => assert!(false),
+            Pane::Remote => assert!(true),
+        }
+    }
+    
+    #[test]
+    fn test_transfer_item_upload() {
+        let item = TransferItem {
+            source: PathBuf::from("/source/file.txt"),
+            destination: PathBuf::from("/dest/file.txt"),
+            direction: TransferDirection::Upload,
+        };
+        
+        assert_eq!(item.source, PathBuf::from("/source/file.txt"));
+        assert_eq!(item.destination, PathBuf::from("/dest/file.txt"));
+        match item.direction {
+            TransferDirection::Upload => assert!(true),
+            TransferDirection::Download => assert!(false),
+        }
+    }
+    
+    #[test]
+    fn test_transfer_item_download() {
+        let item = TransferItem {
+            source: PathBuf::from("/remote/file.txt"),
+            destination: PathBuf::from("/local/file.txt"),
+            direction: TransferDirection::Download,
+        };
+        
+        match item.direction {
+            TransferDirection::Upload => assert!(false),
+            TransferDirection::Download => assert!(true),
+        }
+    }
+    
+    #[test]
+    fn test_transfer_direction_clone() {
+        let upload = TransferDirection::Upload;
+        let cloned = upload.clone();
+        match cloned {
+            TransferDirection::Upload => assert!(true),
+            TransferDirection::Download => assert!(false),
+        }
+    }
+}

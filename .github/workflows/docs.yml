@@ -21,8 +21,9 @@ jobs:
           mkdir -p public
           cp README.md public/
           
-          # Create index.html using printf to avoid YAML parsing issues
-          printf '<!DOCTYPE html>
+          # Create index.html
+          cat > public/index.html << "EOF"
+<!DOCTYPE html>
 <html>
 <head>
     <title>sftui - Terminal UI SFTP Client</title>
@@ -74,7 +75,8 @@ jobs:
     <h2>Quick Install</h2>
     <pre><code>cargo install sftui</code></pre>
 </body>
-</html>' > public/index.html
+</html>
+EOF
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

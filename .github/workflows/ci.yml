@@ -108,6 +108,15 @@ jobs:
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
     
+    # Set OpenSSL environment for macOS
+    - name: Set OpenSSL env (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        echo "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
+        echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
+        echo "OPENSSL_INCLUDE_DIR=$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
+    
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: ${{ matrix.target }}

@@ -1,10 +1,10 @@
+use crate::ssh_config::SshHost;
 use anyhow::{Result, anyhow};
 use ssh2::{Session, Sftp};
 use std::fs;
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
-use crate::ssh_config::SshHost;
 
 #[derive(Debug, Clone)]
 pub struct FileInfo {
@@ -24,13 +24,14 @@ pub struct SftpClient {
 
 impl SftpClient {
     pub fn connect(host_config: &SshHost) -> Result<Self> {
-        let hostname = host_config.hostname.as_ref()
-            .unwrap_or(&host_config.host);
+        let hostname = host_config.hostname.as_ref().unwrap_or(&host_config.host);
         let port = host_config.port.unwrap_or(22);
-        let user = host_config.user.as_ref()
+        let user = host_config
+            .user
+            .as_ref()
             .ok_or_else(|| anyhow!("No username specified"))?;
 
-        let tcp = TcpStream::connect(format!("{}:{}", hostname, port))?;
+        let tcp = TcpStream::connect(format!("{hostname}:{port}"))?;
         let mut session = Session::new()?;
         session.set_tcp_stream(tcp);
         session.handshake()?;
@@ -60,18 +61,22 @@ impl SftpClient {
 
         let sftp = session.sftp()?;
 
-        Ok(SftpClient { _session: session, sftp })
+        Ok(SftpClient {
+            _session: session,
+            sftp,
+        })
     }
 
     pub fn list_directory(&self, path: &Path) -> Result<Vec<FileInfo>> {
         let mut files = Vec::new();
-        
+
         for (path_buf, stat) in self.sftp.readdir(path)? {
-            let name = path_buf.file_name()
+            let name = path_buf
+                .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("Unknown")
                 .to_string();
-            
+
             let is_dir = stat.is_dir();
             let size = stat.size.unwrap_or(0);
             let permissions = stat.perm.unwrap_or(0);
@@ -85,12 +90,10 @@ impl SftpClient {
             });
         }
 
-        files.sort_by(|a, b| {
-            match (a.is_dir, b.is_dir) {
-                (true, false) => std::cmp::Ordering::Less,
-                (false, true) => std::cmp::Ordering::Greater,
-                _ => a.name.cmp(&b.name),
-            }
+        files.sort_by(|a, b| match (a.is_dir, b.is_dir) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.cmp(&b.name),
         });
 
         Ok(files)
@@ -99,7 +102,7 @@ impl SftpClient {
     pub fn download_file(&self, remote_path: &Path, local_path: &Path) -> Result<()> {
         let mut remote_file = self.sftp.open(remote_path)?;
         let mut local_file = fs::File::create(local_path)?;
-        
+
         let mut buffer = [0; 8192];
         loop {
             let bytes_read = remote_file.read(&mut buffer)?;
@@ -108,14 +111,14 @@ impl SftpClient {
             }
             local_file.write_all(&buffer[..bytes_read])?;
         }
-        
+
         Ok(())
     }
 
     pub fn upload_file(&self, local_path: &Path, remote_path: &Path) -> Result<()> {
         let mut local_file = fs::File::open(local_path)?;
         let mut remote_file = self.sftp.create(remote_path)?;
-        
+
         let mut buffer = [0; 8192];
         loop {
             let bytes_read = local_file.read(&mut buffer)?;
@@ -124,7 +127,7 @@ impl SftpClient {
             }
             remote_file.write_all(&buffer[..bytes_read])?;
         }
-        
+
         Ok(())
     }
 

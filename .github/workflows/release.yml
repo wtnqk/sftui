@@ -71,9 +71,6 @@ jobs:
     name: Create GitHub Release
     needs: publish-crate
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      version: ${{ steps.get_version.outputs.version }}
     steps:
     - uses: actions/checkout@v4
     
@@ -97,98 +94,17 @@ jobs:
       with:
         tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', steps.get_version.outputs.version) || github.ref }}
         release_name: Release v${{ steps.get_version.outputs.version }}
+        body: |
+          ## Installation
+          
+          Install via cargo:
+          ```bash
+          cargo install sftui
+          ```
+          
+          ## Changes
+          
+          See [CHANGELOG.md](https://github.com/wtnqk/sftui/blob/master/CHANGELOG.md) for details.
         draft: false
         prerelease: false
-
-  build-binaries:
-    name: Build Release Binaries
-    needs: create-release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - os: ubuntu-latest
-          target: x86_64-unknown-linux-gnu
-          suffix: ""
-          archive: tar.gz
-        - os: ubuntu-latest
-          target: x86_64-unknown-linux-musl
-          suffix: ""
-          archive: tar.gz
-        - os: windows-latest
-          target: x86_64-pc-windows-msvc
-          suffix: ".exe"
-          archive: zip
-        - os: macos-latest
-          target: x86_64-apple-darwin
-          suffix: ""
-          archive: tar.gz
-        - os: macos-latest
-          target: aarch64-apple-darwin
-          suffix: ""
-          archive: tar.gz
-
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install build dependencies
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        if [[ "${{ matrix.target }}" == "x86_64-unknown-linux-musl" ]]; then
-          sudo apt-get install -y musl-tools
-        fi
-        sudo apt-get install -y libssl-dev pkg-config
-    
-    - name: Install OpenSSL (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        choco install openssl
-        echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
-        echo "C:\Program Files\OpenSSL-Win64\bin" >> $env:GITHUB_PATH
-    
-    # Set OpenSSL environment for macOS
-    - name: Set OpenSSL env (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        echo "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-        echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-        echo "OPENSSL_INCLUDE_DIR=$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
-        echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
-    
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: ${{ matrix.target }}
-    
-    - uses: Swatinem/rust-cache@v2
-    
-    - name: Build release binary
-      run: cargo build --release --locked --target ${{ matrix.target }}
-    
-    - name: Package (tar.gz)
-      if: matrix.archive == 'tar.gz'
-      shell: bash
-      run: |
-        cd target/${{ matrix.target }}/release
-        tar czf sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz sftui${{ matrix.suffix }}
-        mv sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz ../../../
-    
-    - name: Package (zip)
-      if: matrix.archive == 'zip'
-      shell: bash
-      run: |
-        cd target/${{ matrix.target }}/release
-        7z a sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip sftui${{ matrix.suffix }}
-        mv sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip ../../../
-    
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive }}
-        asset_name: sftui-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive }}
-        asset_content_type: application/octet-stream
 

@@ -106,4 +106,3 @@ impl SshConfig {
         self.hosts.values().collect()
     }
 }
-

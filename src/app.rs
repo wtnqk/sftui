@@ -48,7 +48,7 @@ pub struct App {
     pub connection_cursor: usize,
     pub show_transfer_dialog: bool,
     pub transfer_queue: Vec<TransferItem>,
-    
+
     pub search_mode: bool,
     pub search_query: String,
     pub filtered_local_files: Vec<FileInfo>,
@@ -85,7 +85,7 @@ impl App {
             connection_cursor: 0,
             show_transfer_dialog: false,
             transfer_queue: Vec::new(),
-            
+
             search_mode: false,
             search_query: String::new(),
             filtered_local_files: Vec::new(),
@@ -130,7 +130,7 @@ impl App {
             if self.show_transfer_dialog {
                 return self.handle_transfer_dialog_event(key.code).await;
             }
-            
+
             if self.search_mode {
                 return self.handle_search_event(key.code).await;
             }
@@ -289,20 +289,23 @@ impl App {
     async fn refresh_remote_files(&mut self) -> Result<()> {
         if let Some(client) = &self.sftp_client {
             self.remote_files = client.list_directory(&self.remote_path)?;
-            
+
             // Add parent directory entry if not at root
             if self.remote_path != PathBuf::from("/") {
                 if let Some(parent) = self.remote_path.parent() {
-                    self.remote_files.insert(0, FileInfo {
-                        name: "..".to_string(),
-                        path: parent.to_path_buf(),
-                        is_dir: true,
-                        size: 0,
-                        permissions: 0o755,
-                    });
+                    self.remote_files.insert(
+                        0,
+                        FileInfo {
+                            name: "..".to_string(),
+                            path: parent.to_path_buf(),
+                            is_dir: true,
+                            size: 0,
+                            permissions: 0o755,
+                        },
+                    );
                 }
             }
-            
+
             self.remote_cursor = 0;
             self.remote_selected.clear();
         }
@@ -452,7 +455,7 @@ impl App {
 
         Ok(())
     }
-    
+
     async fn handle_search_event(&mut self, key: KeyCode) -> Result<()> {
         match key {
             KeyCode::Esc => {
@@ -473,10 +476,10 @@ impl App {
             }
             _ => {}
         }
-        
+
         Ok(())
     }
-    
+
     fn start_search(&mut self) {
         self.search_mode = true;
         self.search_query.clear();
@@ -484,35 +487,37 @@ impl App {
         self.local_cursor = 0;
         self.remote_cursor = 0;
     }
-    
+
     fn update_search_filter(&mut self) {
         if self.search_query.is_empty() {
             self.clear_search_filter();
             return;
         }
-        
+
         let query = self.search_query.to_lowercase();
-        
+
         // Filter local files
-        self.filtered_local_files = self.local_files
+        self.filtered_local_files = self
+            .local_files
             .iter()
             .filter(|file| file.name.to_lowercase().contains(&query))
             .cloned()
             .collect();
-            
+
         // Filter remote files
-        self.filtered_remote_files = self.remote_files
+        self.filtered_remote_files = self
+            .remote_files
             .iter()
             .filter(|file| file.name.to_lowercase().contains(&query))
             .cloned()
             .collect();
     }
-    
+
     fn clear_search_filter(&mut self) {
         self.filtered_local_files.clear();
         self.filtered_remote_files.clear();
     }
-    
+
     pub fn get_current_local_files(&self) -> &[FileInfo] {
         if self.search_mode && !self.search_query.is_empty() {
             &self.filtered_local_files
@@ -520,7 +525,7 @@ impl App {
             &self.local_files
         }
     }
-    
+
     pub fn get_current_remote_files(&self) -> &[FileInfo] {
         if self.search_mode && !self.search_query.is_empty() {
             &self.filtered_remote_files
@@ -529,4 +534,3 @@ impl App {
         }
     }
 }
-

@@ -13,7 +13,7 @@ use ratatui::{
 };
 use std::collections::HashSet;
 use std::io;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::app::{App, Pane, TransferItem};
 use crate::sftp::FileInfo;
@@ -103,12 +103,13 @@ impl Ui {
         f.render_widget(header, area);
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn draw_panes(
         f: &mut Frame,
         area: Rect,
         active_pane: &Pane,
-        local_path: &PathBuf,
-        remote_path: &PathBuf,
+        local_path: &Path,
+        remote_path: &Path,
         local_files: &[FileInfo],
         remote_files: &[FileInfo],
         local_cursor: usize,
@@ -145,7 +146,7 @@ impl Ui {
         f: &mut Frame,
         area: Rect,
         active_pane: &Pane,
-        local_path: &PathBuf,
+        local_path: &Path,
         local_files: &[FileInfo],
         local_cursor: usize,
         local_selected: &HashSet<usize>,
@@ -161,13 +162,7 @@ impl Ui {
             .iter()
             .enumerate()
             .map(|(i, file)| {
-                let prefix = if file.name == ".." {
-                    " "
-                } else if file.is_dir {
-                    " "
-                } else {
-                    " "
-                };
+                let prefix = " ";
                 let name = format!("{}{}", prefix, file.name);
                 let mut item_style = Style::default();
 
@@ -198,7 +193,7 @@ impl Ui {
         f: &mut Frame,
         area: Rect,
         active_pane: &Pane,
-        remote_path: &PathBuf,
+        remote_path: &Path,
         remote_files: &[FileInfo],
         remote_cursor: usize,
         remote_selected: &HashSet<usize>,
@@ -214,13 +209,7 @@ impl Ui {
             .iter()
             .enumerate()
             .map(|(i, file)| {
-                let prefix = if file.name == ".." {
-                    " "
-                } else if file.is_dir {
-                    " "
-                } else {
-                    " "
-                };
+                let prefix = " ";
                 let name = format!("{}{}", prefix, file.name);
                 let mut item_style = Style::default();
 
@@ -380,4 +369,3 @@ impl Drop for Ui {
         );
     }
 }
-

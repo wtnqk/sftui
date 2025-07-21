@@ -542,16 +542,10 @@ mod tests {
     #[test]
     fn test_pane_toggle() {
         let pane = Pane::Local;
-        match pane {
-            Pane::Local => assert!(true),
-            Pane::Remote => assert!(false),
-        }
+        assert_eq!(pane, Pane::Local);
 
         let pane = Pane::Remote;
-        match pane {
-            Pane::Local => assert!(false),
-            Pane::Remote => assert!(true),
-        }
+        assert_eq!(pane, Pane::Remote);
     }
 
     #[test]
@@ -564,10 +558,7 @@ mod tests {
 
         assert_eq!(item.source, PathBuf::from("/source/file.txt"));
         assert_eq!(item.destination, PathBuf::from("/dest/file.txt"));
-        match item.direction {
-            TransferDirection::Upload => assert!(true),
-            TransferDirection::Download => assert!(false),
-        }
+        assert!(matches!(item.direction, TransferDirection::Upload));
     }
 
     #[test]
@@ -578,19 +569,13 @@ mod tests {
             direction: TransferDirection::Download,
         };
 
-        match item.direction {
-            TransferDirection::Upload => assert!(false),
-            TransferDirection::Download => assert!(true),
-        }
+        assert!(matches!(item.direction, TransferDirection::Download));
     }
 
     #[test]
     fn test_transfer_direction_clone() {
         let upload = TransferDirection::Upload;
         let cloned = upload.clone();
-        match cloned {
-            TransferDirection::Upload => assert!(true),
-            TransferDirection::Download => assert!(false),
-        }
+        assert!(matches!(cloned, TransferDirection::Upload));
     }
 }

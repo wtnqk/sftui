@@ -244,7 +244,7 @@ Host testhost
             .parse_config(&temp_file.path().to_path_buf())
             .unwrap();
         // Check that we have at least the 1 host we defined (may include default Host *)
-        assert!(config.get_all_hosts().len() >= 1);
+        assert!(!config.get_all_hosts().is_empty());
 
         let host = config.get_host("testhost").unwrap();
         assert_eq!(host.hostname.as_ref().unwrap(), "test.example.com");

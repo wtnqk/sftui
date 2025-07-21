@@ -1,1 +1,4 @@
 /target
+Dockerfile
+docker-compose.yml
+README_CONTAINER.md

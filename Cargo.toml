@@ -1,6 +1,6 @@
 [package]
 name = "sftui"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["wtnqk"]
 description = "A terminal UI SFTP client with dual-pane interface"
@@ -19,4 +19,3 @@ anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 dirs = "5.0"
 clap = { version = "4.0", features = ["derive"] }
-

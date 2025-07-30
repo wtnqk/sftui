@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use crossterm::event::{Event, KeyCode};
 use std::collections::HashSet;
 use std::env;
@@ -60,7 +60,7 @@ pub struct App {
 impl App {
     pub async fn new(initial_host: Option<String>) -> Result<Self> {
         let ssh_config = SshConfig::new()?;
-        let available_hosts = ssh_config.get_all_hosts().into_iter().cloned().collect();
+        let available_hosts = ssh_config.get_all_hosts();
 
         let local_path = env::current_dir()?;
         let remote_path = PathBuf::from("/");
@@ -220,9 +220,15 @@ impl App {
         let host_config = self
             .ssh_config
             .get_host(host_name)
-            .ok_or_else(|| anyhow!("Host {} not found in SSH config", host_name))?;
+            .unwrap_or_else(|| SshHost {
+                host: host_name.to_string(),
+                hostname: Some(host_name.to_string()),
+                user: None,
+                port: None,
+                identity_file: None,
+            });
 
-        let client = SftpClient::connect(host_config)?;
+        let client = SftpClient::connect(&host_config)?;
         self.sftp_client = Some(client);
         self.current_host = Some(host_name.to_string());
         self.remote_path = PathBuf::from("/");

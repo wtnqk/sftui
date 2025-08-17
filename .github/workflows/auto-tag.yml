@@ -10,11 +10,12 @@ jobs:
   auto-tag:
     name: Create Tag on Version Change
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-          token: ${{ secrets.AUTO_TAG_TOKEN || secrets.GITHUB_TOKEN }}  # Use PAT to trigger release workflow
 
       - name: Check if version changed
         id: version_check

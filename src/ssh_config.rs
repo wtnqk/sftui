@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
 use regex::Regex;
+use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 
@@ -10,6 +11,7 @@ pub struct SshHost {
     pub user: Option<String>,
     pub port: Option<u16>,
     pub identity_file: Option<PathBuf>,
+    pub proxy_jump: Option<String>,
 }
 
 #[derive(Debug)]
@@ -19,6 +21,7 @@ struct SshConfigEntry {
     user: Option<String>,
     port: Option<u16>,
     identity_file: Option<PathBuf>,
+    proxy_jump: Option<String>,
 }
 
 pub struct SshConfig {
@@ -70,6 +73,7 @@ impl SshConfig {
                                 user: entry.user.clone(),
                                 port: entry.port,
                                 identity_file: entry.identity_file.clone(),
+                                proxy_jump: entry.proxy_jump.clone(),
                             });
                         }
                     }
@@ -81,6 +85,7 @@ impl SshConfig {
                         user: None,
                         port: None,
                         identity_file: None,
+                        proxy_jump: None,
                     });
                 }
                 "hostname" => {
@@ -105,6 +110,11 @@ impl SshConfig {
                         entry.identity_file = Some(PathBuf::from(value));
                     }
                 }
+                "proxyjump" => {
+                    if let Some(ref mut entry) = current_entry {
+                        entry.proxy_jump = Some(value);
+                    }
+                }
                 _ => {}
             }
         }
@@ -118,6 +128,7 @@ impl SshConfig {
                     user: entry.user.clone(),
                     port: entry.port,
                     identity_file: entry.identity_file.clone(),
+                    proxy_jump: entry.proxy_jump.clone(),
                 });
             }
         }
@@ -125,18 +136,65 @@ impl SshConfig {
         Ok(())
     }
 
-    pub fn get_host(&self, name: &str) -> Option<&SshHost> {
-        // SSH config uses first-match-wins strategy
-        self.hosts
-            .iter()
-            .find(|&host| self.pattern_matches(&host.host, name))
+    pub fn get_host(&self, name: &str) -> Option<SshHost> {
+        // SSH config merges all matching patterns, with first-match-wins for each property
+        let mut merged = None;
+
+        for host in &self.hosts {
+            if self.pattern_matches(&host.host, name) {
+                if merged.is_none() {
+                    // First matching pattern, use it as base
+                    merged = Some(SshHost {
+                        host: name.to_string(), // Use the actual hostname, not the pattern
+                        hostname: host.hostname.clone(),
+                        user: host.user.clone(),
+                        port: host.port,
+                        identity_file: host.identity_file.clone(),
+                        proxy_jump: host.proxy_jump.clone(),
+                    });
+                } else if let Some(ref mut m) = merged {
+                    // Merge subsequent matches, only filling in missing values
+                    if m.hostname.is_none() && host.hostname.is_some() {
+                        m.hostname = host.hostname.clone();
+                    }
+                    if m.user.is_none() && host.user.is_some() {
+                        m.user = host.user.clone();
+                    }
+                    if m.port.is_none() && host.port.is_some() {
+                        m.port = host.port;
+                    }
+                    if m.identity_file.is_none() && host.identity_file.is_some() {
+                        m.identity_file = host.identity_file.clone();
+                    }
+                    if m.proxy_jump.is_none() && host.proxy_jump.is_some() {
+                        m.proxy_jump = host.proxy_jump.clone();
+                    }
+                }
+            }
+        }
+
+        merged
     }
 
-    pub fn get_all_hosts(&self) -> Vec<&SshHost> {
-        self.hosts
-            .iter()
-            .filter(|host| !host.host.contains('*') && !host.host.contains('?'))
-            .collect()
+    pub fn get_all_hosts(&self) -> Vec<SshHost> {
+        let mut result = Vec::new();
+        let mut seen = HashSet::new();
+
+        // First, collect all concrete (non-wildcard) host names
+        for host in &self.hosts {
+            if !host.host.contains('*')
+                && !host.host.contains('?')
+                && !host.host.contains('!')
+                && seen.insert(host.host.clone())
+            {
+                // Get the merged configuration for this host
+                if let Some(merged) = self.get_host(&host.host) {
+                    result.push(merged);
+                }
+            }
+        }
+
+        result
     }
 
     fn pattern_matches(&self, pattern: &str, hostname: &str) -> bool {
@@ -440,6 +498,98 @@ Host *.local
 
         // This is handled by SftpClient::connect which uses:
         // let hostname = host_config.hostname.as_ref().unwrap_or(&host_config.host);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_wildcard_inheritance() -> Result<()> {
+        let config = create_test_config(
+            r#"
+Host app-*
+    User appuser
+    IdentityFile ~/.ssh/app_key.pem
+
+Host app-gateway
+    HostName 192.168.1.1
+
+Host app-server
+    HostName 10.0.0.1
+    ProxyJump app-gateway
+
+Host db-*
+    User dbadmin
+    Port 5432
+
+Host db-primary
+    HostName db1.internal
+
+Host db-replica
+    HostName db2.internal
+"#,
+        )?;
+
+        // app-server should inherit User from app-* and have ProxyJump
+        let host = config.get_host("app-server").unwrap();
+        assert_eq!(host.host, "app-server");
+        assert_eq!(host.hostname, Some("10.0.0.1".to_string()));
+        assert_eq!(host.user, Some("appuser".to_string()));
+        assert_eq!(
+            host.identity_file,
+            Some(PathBuf::from("~/.ssh/app_key.pem"))
+        );
+        assert_eq!(host.proxy_jump, Some("app-gateway".to_string()));
+
+        // db-primary should inherit User and Port from db-*
+        let host = config.get_host("db-primary").unwrap();
+        assert_eq!(host.host, "db-primary");
+        assert_eq!(host.hostname, Some("db1.internal".to_string()));
+        assert_eq!(host.user, Some("dbadmin".to_string()));
+        assert_eq!(host.port, Some(5432));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_bastion_with_wildcard() -> Result<()> {
+        let config = create_test_config(
+            r#"
+Host env-*
+    User deploy
+    IdentityFile ~/.ssh/deploy_key
+
+Host env-bastion
+    HostName 10.0.0.1
+
+Host env-app
+    HostName 192.168.1.10
+    ProxyJump env-bastion
+"#,
+        )?;
+
+        // env-bastion should get User from env-*
+        let bastion = config.get_host("env-bastion").unwrap();
+        assert_eq!(bastion.host, "env-bastion");
+        assert_eq!(bastion.hostname, Some("10.0.0.1".to_string()));
+        assert_eq!(bastion.user, Some("deploy".to_string()));
+        assert_eq!(
+            bastion.identity_file,
+            Some(PathBuf::from("~/.ssh/deploy_key"))
+        );
+
+        // env-app should also get User from env-* and have ProxyJump
+        let app = config.get_host("env-app").unwrap();
+        assert_eq!(app.host, "env-app");
+        assert_eq!(app.hostname, Some("192.168.1.10".to_string()));
+        assert_eq!(app.user, Some("deploy".to_string()));
+        assert_eq!(app.proxy_jump, Some("env-bastion".to_string()));
+
+        // get_all_hosts should include both hosts
+        let all_hosts = config.get_all_hosts();
+        assert_eq!(all_hosts.len(), 2);
+        let host_names: Vec<&str> = all_hosts.iter().map(|h| h.host.as_str()).collect();
+        assert!(host_names.contains(&"env-bastion"));
+        assert!(host_names.contains(&"env-app"));
 
         Ok(())
     }

@@ -60,7 +60,7 @@ pub struct App {
 impl App {
     pub async fn new(initial_host: Option<String>) -> Result<Self> {
         let ssh_config = SshConfig::new()?;
-        let available_hosts = ssh_config.get_all_hosts().into_iter().cloned().collect();
+        let available_hosts = ssh_config.get_all_hosts();
 
         let local_path = env::current_dir()?;
         let remote_path = PathBuf::from("/");
@@ -220,13 +220,13 @@ impl App {
         let host_config = self
             .ssh_config
             .get_host(host_name)
-            .cloned()
             .unwrap_or_else(|| SshHost {
                 host: host_name.to_string(),
                 hostname: Some(host_name.to_string()),
                 user: None,
                 port: None,
                 identity_file: None,
+                proxy_jump: None,
             });
 
         let client = SftpClient::connect(&host_config)?;

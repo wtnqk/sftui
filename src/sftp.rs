@@ -4,10 +4,14 @@ use ssh2::{Channel, Session, Sftp};
 use std::fs;
 use std::io::prelude::*;
 use std::net::TcpStream;
+#[cfg(unix)]
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
+#[cfg(unix)]
 use std::sync::{Arc, Mutex};
+#[cfg(unix)]
 use std::thread;
+#[cfg(unix)]
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
@@ -23,11 +27,14 @@ pub struct FileInfo {
 
 pub struct SftpClient {
     _session: Session,
+    #[cfg(unix)]
     _bastion_session: Option<Session>,
+    #[cfg(unix)]
     _proxy_threads: Option<ProxyThreads>,
     sftp: Sftp,
 }
 
+#[cfg(unix)]
 struct ProxyThreads {
     #[allow(dead_code)]
     handles: Vec<thread::JoinHandle<()>>,
@@ -36,6 +43,7 @@ struct ProxyThreads {
 impl SftpClient {
     pub fn connect(host_config: &SshHost) -> Result<Self> {
         // Check if we need to use ProxyJump
+        #[cfg(unix)]
         if let Some(proxy_jump) = &host_config.proxy_jump {
             // Get SSH config to look up bastion host details
             let ssh_config = SshConfig::new()?;
@@ -43,11 +51,16 @@ impl SftpClient {
                 anyhow!("ProxyJump host '{}' not found in SSH config", proxy_jump)
             })?;
 
-            Self::connect_via_proxy(host_config, &bastion_config)
-        } else {
-            // Direct connection
-            Self::connect_direct(host_config)
+            return Self::connect_via_proxy(host_config, &bastion_config);
         }
+
+        #[cfg(not(unix))]
+        if host_config.proxy_jump.is_some() {
+            return Err(anyhow!("ProxyJump is not supported on Windows"));
+        }
+
+        // Direct connection
+        Self::connect_direct(host_config)
     }
 
     fn connect_direct(host_config: &SshHost) -> Result<Self> {
@@ -90,12 +103,15 @@ impl SftpClient {
 
         Ok(SftpClient {
             _session: session,
+            #[cfg(unix)]
             _bastion_session: None,
+            #[cfg(unix)]
             _proxy_threads: None,
             sftp,
         })
     }
 
+    #[cfg(unix)]
     fn connect_via_proxy(host_config: &SshHost, bastion_config: &SshHost) -> Result<Self> {
         // First, connect to bastion host
         let bastion_hostname = bastion_config
@@ -220,6 +236,7 @@ impl SftpClient {
         })
     }
 
+    #[cfg(unix)]
     fn start_proxy_threads(channel: Arc<Mutex<Channel>>, sock: UnixStream) -> Result<ProxyThreads> {
         let sock_clone = sock.try_clone()?;
         let channel_clone = Arc::clone(&channel);
@@ -436,6 +453,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)]
     fn test_proxy_jump_config() {
         // Test that ProxyJump configuration is properly detected
         let host_with_proxy = SshHost {

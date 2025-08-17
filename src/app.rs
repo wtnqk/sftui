@@ -298,19 +298,19 @@ impl App {
             self.remote_files = client.list_directory(&self.remote_path)?;
 
             // Add parent directory entry if not at root
-            if self.remote_path != PathBuf::from("/") {
-                if let Some(parent) = self.remote_path.parent() {
-                    self.remote_files.insert(
-                        0,
-                        FileInfo {
-                            name: "..".to_string(),
-                            path: parent.to_path_buf(),
-                            is_dir: true,
-                            size: 0,
-                            permissions: 0o755,
-                        },
-                    );
-                }
+            if self.remote_path != PathBuf::from("/")
+                && let Some(parent) = self.remote_path.parent()
+            {
+                self.remote_files.insert(
+                    0,
+                    FileInfo {
+                        name: "..".to_string(),
+                        path: parent.to_path_buf(),
+                        is_dir: true,
+                        size: 0,
+                        permissions: 0o755,
+                    },
+                );
             }
 
             self.remote_cursor = 0;
@@ -356,26 +356,26 @@ impl App {
         match self.active_pane {
             Pane::Local => {
                 let files = self.get_current_local_files();
-                if let Some(file) = files.get(self.local_cursor) {
-                    if file.is_dir {
-                        self.local_path = file.path.clone();
-                        self.search_mode = false;
-                        self.search_query.clear();
-                        self.clear_search_filter();
-                        self.refresh_local_files()?;
-                    }
+                if let Some(file) = files.get(self.local_cursor)
+                    && file.is_dir
+                {
+                    self.local_path = file.path.clone();
+                    self.search_mode = false;
+                    self.search_query.clear();
+                    self.clear_search_filter();
+                    self.refresh_local_files()?;
                 }
             }
             Pane::Remote => {
                 let files = self.get_current_remote_files();
-                if let Some(file) = files.get(self.remote_cursor) {
-                    if file.is_dir {
-                        self.remote_path = file.path.clone();
-                        self.search_mode = false;
-                        self.search_query.clear();
-                        self.clear_search_filter();
-                        self.refresh_remote_files().await?;
-                    }
+                if let Some(file) = files.get(self.remote_cursor)
+                    && file.is_dir
+                {
+                    self.remote_path = file.path.clone();
+                    self.search_mode = false;
+                    self.search_query.clear();
+                    self.clear_search_filter();
+                    self.refresh_remote_files().await?;
                 }
             }
         }

@@ -349,10 +349,10 @@ impl Ui {
     pub fn handle_events(&self) -> Result<Option<Event>> {
         if crossterm::event::poll(std::time::Duration::from_millis(100))? {
             let event = crossterm::event::read()?;
-            if let Event::Key(key) = &event {
-                if key.kind == KeyEventKind::Press {
-                    return Ok(Some(event));
-                }
+            if let Event::Key(key) = &event
+                && key.kind == KeyEventKind::Press
+            {
+                return Ok(Some(event));
             }
         }
         Ok(None)

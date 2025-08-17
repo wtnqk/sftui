@@ -32,9 +32,7 @@ impl SshConfig {
             .join(".ssh")
             .join("config");
 
-        let mut ssh_config = SshConfig {
-            hosts: Vec::new(),
-        };
+        let mut ssh_config = SshConfig { hosts: Vec::new() };
 
         if config_path.exists() {
             ssh_config.parse_config(&config_path)?;
@@ -75,10 +73,8 @@ impl SshConfig {
                             });
                         }
                     }
-                    let patterns: Vec<String> = value
-                        .split_whitespace()
-                        .map(|s| s.to_string())
-                        .collect();
+                    let patterns: Vec<String> =
+                        value.split_whitespace().map(|s| s.to_string()).collect();
                     current_entry = Some(SshConfigEntry {
                         patterns,
                         hostname: None,
@@ -98,10 +94,10 @@ impl SshConfig {
                     }
                 }
                 "port" => {
-                    if let Some(ref mut entry) = current_entry {
-                        if let Ok(port) = value.parse::<u16>() {
-                            entry.port = Some(port);
-                        }
+                    if let Some(ref mut entry) = current_entry
+                        && let Ok(port) = value.parse::<u16>()
+                    {
+                        entry.port = Some(port);
                     }
                 }
                 "identityfile" => {
@@ -131,12 +127,9 @@ impl SshConfig {
 
     pub fn get_host(&self, name: &str) -> Option<&SshHost> {
         // SSH config uses first-match-wins strategy
-        for host in &self.hosts {
-            if self.pattern_matches(&host.host, name) {
-                return Some(host);
-            }
-        }
-        None
+        self.hosts
+            .iter()
+            .find(|&host| self.pattern_matches(&host.host, name))
     }
 
     pub fn get_all_hosts(&self) -> Vec<&SshHost> {
@@ -145,34 +138,34 @@ impl SshConfig {
             .filter(|host| !host.host.contains('*') && !host.host.contains('?'))
             .collect()
     }
-    
+
     fn pattern_matches(&self, pattern: &str, hostname: &str) -> bool {
         // Exact match (no wildcards)
         if !pattern.contains('*') && !pattern.contains('?') && !pattern.starts_with('!') {
             return pattern == hostname;
         }
-        
+
         // Handle negation
-        let (pattern, is_negated) = if pattern.starts_with('!') {
-            (&pattern[1..], true)
+        let (pattern, is_negated) = if let Some(stripped) = pattern.strip_prefix('!') {
+            (stripped, true)
         } else {
             (pattern, false)
         };
-        
+
         // If pattern still has no wildcards after removing !, it's an exact negation match
         if !pattern.contains('*') && !pattern.contains('?') {
             let matches = pattern == hostname;
             return if is_negated { !matches } else { matches };
         }
-        
+
         // Convert SSH pattern to regex
         let regex_pattern = pattern
             .replace('.', r"\.")
             .replace('*', ".*")
             .replace('?', ".");
-        
-        let regex_pattern = format!("^{}$", regex_pattern);
-        
+
+        let regex_pattern = format!("^{regex_pattern}$");
+
         if let Ok(regex) = Regex::new(&regex_pattern) {
             let matches = regex.is_match(hostname);
             if is_negated { !matches } else { matches }
@@ -190,13 +183,11 @@ mod tests {
 
     fn create_test_config(content: &str) -> Result<SshConfig> {
         let mut file = NamedTempFile::new()?;
-        write!(file, "{}", content)?;
-        
-        let mut config = SshConfig {
-            hosts: Vec::new(),
-        };
+        write!(file, "{content}")?;
+
+        let mut config = SshConfig { hosts: Vec::new() };
         config.parse_config(&file.path().to_path_buf())?;
-        
+
         Ok(config)
     }
 
@@ -212,7 +203,7 @@ Host server1
 Host server2
     HostName server2.example.com
     User root
-"#
+"#,
         )?;
 
         // Test exact matches
@@ -247,7 +238,7 @@ Host prod-*.example.com
 Host *.example.com
     User webuser
     Port 443
-"#
+"#,
         )?;
 
         // Test specific match takes precedence (comes first)
@@ -281,7 +272,7 @@ Host server?
 Host server??
     HostName 10.1.0.%h
     User superadmin
-"#
+"#,
         )?;
 
         // Single character wildcard
@@ -311,7 +302,7 @@ Host *.internal.com
 Host !*.internal.com
     User external
     Port 22
-"#
+"#,
         )?;
 
         // Should match internal pattern
@@ -321,7 +312,7 @@ Host !*.internal.com
 
         // The negation pattern itself is not useful without being part of multi-pattern
         // For now, we'll skip testing standalone negation patterns
-        
+
         Ok(())
     }
 
@@ -337,7 +328,7 @@ Host *.example.com
 
 Host *
     User default_user
-"#
+"#,
         )?;
 
         // Most specific match
@@ -373,7 +364,7 @@ Host server?
 
 Host * !*.internal
     User external
-"#
+"#,
         )?;
 
         let all_hosts = config.get_all_hosts();
@@ -408,7 +399,7 @@ Host prod-*
 Host *-db-*
     User dbuser
     Port 3306
-"#
+"#,
         )?;
 
         // Should match most specific pattern first
@@ -440,13 +431,13 @@ Host myserver
 
 Host *.local
     User localuser
-"#
+"#,
         )?;
 
         // When hostname is not specified, it should use the host pattern
         let host = config.get_host("myserver").unwrap();
         assert_eq!(host.hostname, None);
-        
+
         // This is handled by SftpClient::connect which uses:
         // let hostname = host_config.hostname.as_ref().unwrap_or(&host_config.host);
 

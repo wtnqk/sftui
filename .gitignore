@@ -2,3 +2,5 @@
 Dockerfile
 docker-compose.yml
 README_CONTAINER.md
+docker
+debug_sftui.sh

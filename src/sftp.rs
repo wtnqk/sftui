@@ -78,13 +78,10 @@ impl SftpClient {
 
         // Try authentication methods
         let auth_result = if let Some(identity_file) = &host_config.identity_file {
-            // First try with public key file if it exists
-            let pubkey_path = PathBuf::from(format!("{}.pub", identity_file.display()));
-            if pubkey_path.exists() {
-                session.userauth_pubkey_file(user, Some(&pubkey_path), identity_file, None)
-            } else {
-                session.userauth_pubkey_file(user, None, identity_file, None)
-            }
+            // Try public key authentication with the identity file
+            // Note: For PEM files and standard SSH keys, we don't need the .pub file
+            // The public key can be derived from the private key
+            session.userauth_pubkey_file(user, None, identity_file, None)
         } else {
             // No identity file specified, use ssh-agent
             session.userauth_agent(user)
@@ -140,17 +137,10 @@ impl SftpClient {
 
         // Authenticate to bastion
         let auth_result = if let Some(identity_file) = &bastion_config.identity_file {
-            let pubkey_path = PathBuf::from(format!("{}.pub", identity_file.display()));
-            if pubkey_path.exists() {
-                bastion_session.userauth_pubkey_file(
-                    bastion_user,
-                    Some(&pubkey_path),
-                    identity_file,
-                    None,
-                )
-            } else {
-                bastion_session.userauth_pubkey_file(bastion_user, None, identity_file, None)
-            }
+            // Try public key authentication with the identity file
+            // Note: For PEM files and standard SSH keys, we don't need the .pub file
+            // The public key can be derived from the private key
+            bastion_session.userauth_pubkey_file(bastion_user, None, identity_file, None)
         } else {
             bastion_session.userauth_agent(bastion_user)
         };
@@ -203,17 +193,10 @@ impl SftpClient {
             .ok_or_else(|| anyhow!("No username specified for target host"))?;
 
         let auth_result = if let Some(identity_file) = &host_config.identity_file {
-            let pubkey_path = PathBuf::from(format!("{}.pub", identity_file.display()));
-            if pubkey_path.exists() {
-                target_session.userauth_pubkey_file(
-                    target_user,
-                    Some(&pubkey_path),
-                    identity_file,
-                    None,
-                )
-            } else {
-                target_session.userauth_pubkey_file(target_user, None, identity_file, None)
-            }
+            // Try public key authentication with the identity file
+            // Note: For PEM files and standard SSH keys, we don't need the .pub file
+            // The public key can be derived from the private key
+            target_session.userauth_pubkey_file(target_user, None, identity_file, None)
         } else {
             target_session.userauth_agent(target_user)
         };

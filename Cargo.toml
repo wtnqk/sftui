@@ -11,15 +11,15 @@ keywords = ["sftp", "ssh", "tui", "terminal", "file-transfer"]
 categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
-crossterm = "0.28"
-ratatui = "0.28"
-tokio = { version = "1.0", features = ["full"] }
+crossterm = "0.29"
+ratatui = "0.29"
+tokio = { version = "1.47", features = ["full"] }
 ssh2 = "0.9"
 regex = "1.0"
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 dirs = "6.0"
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 
 [dev-dependencies]
 tempfile = "3.0"

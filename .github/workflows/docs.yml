@@ -31,7 +31,7 @@ jobs:
           echo 'See [README.md](README.md) for full documentation.' >> _site/index.md
           
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
